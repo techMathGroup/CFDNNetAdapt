@@ -179,8 +179,11 @@ class NSGAII(AbstractGeneticAlgorithm):
         self.archive = archive
         self.checkPoint = checkPoint
         self.lastPopulation = lastPopulation
+        self.iIter = 0
 
     def step(self):
+        self.iIter += 1
+
         if self.nfe == 0:
             self.initialize()
         else:
@@ -190,6 +193,10 @@ class NSGAII(AbstractGeneticAlgorithm):
             self.result = self.archive
         else:
             self.result = self.population
+
+        # verbose
+        if self.problem.verbose:
+            print("Step:", self.iIter, "Evaluations done:", self.nfe, "Result length:", len(self.result), flush = True)
 
     def initialize(self):
         if self.checkPoint is None:

@@ -545,7 +545,7 @@ def RTRL(net,data):
                         #delays >0 and <q
                             sum_d = sum_d + np.dot(LW[x,u_,d],dA_dw[q-d,u_])
                     sum_u_ = sum_u_+sum_d
-                if sum_u_ is not 0:
+                if sum_u_ != 0:
                     dAd_dw = dAd_dw + np.dot(S[q,u,x],sum_u_) #sum up dynamic derivative
                     
             #static + dynamic derivative
