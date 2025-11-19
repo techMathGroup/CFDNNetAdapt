@@ -56,6 +56,7 @@ class CFDNNetAdapt:
         self.popSize = None # population size
         self.nGens = None # number of generations
         self.archive = None # selected archive from platypus to same non-dominated solutions
+        self.moeaVerbose = False # print info about moea run
 
         # directories and data files
         self.mainDir = None # main save directory
@@ -95,7 +96,7 @@ class CFDNNetAdapt:
         # prepare samples
         self.source, self.target = self.loadAndScaleData(self.smpDir + self.prbDir, self.dataNm, self.nPars, self.nOuts)
         self.souall, self.tarall = self.loadAndScaleData(self.smpDir + self.prbDir, self.dataNm, self.nPars, self.nObjs)
-        self.maxSam = np.shape(self.source)[1] # maximum number of asmples
+        self.maxSam = np.shape(self.source)[1] # maximum number of samples
 
     def run(self):
         # start log
@@ -265,7 +266,7 @@ class CFDNNetAdapt:
         toAdd = np.append(aSource, aTarget, axis = 0)
 
         # find current nondominated solutions
-        nondoms = self.addNondominatedSolutions(smpNondoms, toAdd)
+        nondoms = self.addNondominatedSolutions(smpNondoms, toAdd.T)
         return nondoms
 
     def checkLastBestDNN(self, netNondoms, smpNondoms):
@@ -437,7 +438,7 @@ class CFDNNetAdapt:
             # compare samples and dnn nondominated solutions
             dists = self.compareParetoFronts(netNondoms, smpNondoms)
             cError = sum(dists)/len(dists)
-            self.outFile.write("Mean difference of net " + netNm + " Pareto front: " + cError + "\n")
+            self.outFile.write("Mean difference of net " + netNm + " Pareto front: " + str(cError) + "\n")
             self.outFile.flush()
 
             # identify the best network
@@ -448,7 +449,7 @@ class CFDNNetAdapt:
         return bestNet, netNondoms
     
     def runDNNOptimization(self, netStruct, netNm, netDir, parallelNum):
-        # list net save directory
+        # prepare for optimization
         ls = os.listdir(netDir)
         ls = [i for i in ls if ".png" not in i]
     
@@ -464,6 +465,7 @@ class CFDNNetAdapt:
         problem = plat.Problem(self.nPars, self.nObjs)
         problem.types[:] = [plat.Real(self.pMins[p],self.pMaxs[p]) for p in range(self.nPars)]
         problem.function = self.dnnEvalFunc
+        problem.verbose = self.moeaVerbose
 
         # run the optimization algorithm with archiving data
         with plat.MultiprocessingEvaluator(parallelNum) as evaluator:
@@ -560,7 +562,7 @@ class CFDNNetAdapt:
 
         # save original data to archive
         if originalData is not None:
-            for solution in originalData.T:
+            for solution in originalData:
                 individuum = plat.core.Solution(problem)
                 individuum.variables = [solution[i] for i in range(self.nPars)]
                 individuum.objectives = [solution[i] for i in range(self.nPars, len(solution))]
@@ -568,7 +570,7 @@ class CFDNNetAdapt:
                 self.archive._contents.append(individuum)
 
         # add new data 
-        for solution in newData.T:
+        for solution in newData:
             individuum = plat.core.Solution(problem)
             individuum.variables = [solution[i] for i in range(self.nPars)]
             individuum.objectives = [solution[i] for i in range(self.nPars, len(solution))]
