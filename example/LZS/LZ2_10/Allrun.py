@@ -77,8 +77,8 @@ algorithm.dataNm = "10_platypusAllSolutions.dat"
 algorithm.minMax = ""
 
 # algorithm parameters
-algorithm.nSam = 5000
-algorithm.deltaNSams = [5000]
+algorithm.nSam = 100
+algorithm.deltaNSams = [100, 300, 500, 1000, 5000]
 algorithm.nNN = 4
 algorithm.minN = 3
 algorithm.maxN = 30
